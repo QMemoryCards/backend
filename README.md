@@ -30,13 +30,12 @@ dbscripts/liquibase/memorycards/changelog
 Формат changeSet:
 ```
   - changeSet:
-    id: migration-id
-    author: author
-    comment: migration
-    changes:
-      - sqlFile:
-        main
+      id: v_1_0_0
+      author: "Marco Villarreal"
+      comment: "Initial dummy library database schema"
+      sqlFile:
         encoding: utf8
-        path: changelog/migration-id.sql
         relativeToChangelogFile: true
+        stripComments: true
+        path: "v_1_0_0/main-changelog.sql"
 ```
