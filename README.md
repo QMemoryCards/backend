@@ -34,7 +34,7 @@ dbscripts/liquibase/memorycards/changelog
     author: author
     comment: migration
     changes:
-      -sqlFile:
+      - sqlFile:
         encoding: utf8
         path: changelog/migration-id.sql
         relativeToChangelogFile: true
