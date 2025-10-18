@@ -1,0 +1,21 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: memory-cards-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/memory_cards
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    enabled: false #TODO: поменять на true после создания таблиц в бд
+    change-log: file:./dbscripts/liquibase/memorycards/changelog.yaml
+    default-schema: main
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
