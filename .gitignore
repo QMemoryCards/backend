@@ -13,6 +13,5 @@ out/
 !**src/test/**/out/
 
 *.class
-*.jar
 *.war
 *.ear
