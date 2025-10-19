@@ -1,7 +1,6 @@
 
 .gradle
 build/
-!gradle/wrapper/gradle-wrapper.jar
 !**src/main/**/build/
 !**src/test/**/build/
 
@@ -15,3 +14,6 @@ out/
 *.class
 *.war
 *.ear
+*.jar
+
+!gradle/wrapper/gradle-wrapper.jar
