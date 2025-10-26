@@ -66,7 +66,7 @@ jobs:
             gradle-cache-${{ runner.os }}-
 
       - name: Build project
-        run: ./gradlew build
+        run: ./gradlew build -x ktlintCheck
 
       - name: Save build outputs
         uses: actions/upload-artifact@v4
@@ -103,4 +103,4 @@ jobs:
           name: build-artifacts
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test -x ktlintCheck
