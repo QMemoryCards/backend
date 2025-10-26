@@ -97,10 +97,5 @@ jobs:
           restore-keys: |
             gradle-cache-${{ runner.os }}-
 
-      - name: Download build outputs
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-
       - name: Run tests
         run: ./gradlew test -x ktlintCheck
