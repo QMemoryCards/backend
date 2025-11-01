@@ -1,6 +1,7 @@
 package ru.spbstu.memory.cards.exception
 
 import jakarta.validation.ConstraintViolationException
+import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,15 +15,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.NoHandlerFoundException
-import ru.spbstu.memory.cards.domain.exception.ConflictException
-import ru.spbstu.memory.cards.domain.exception.ForbiddenException
-import ru.spbstu.memory.cards.domain.exception.LimitExceededException
-import ru.spbstu.memory.cards.domain.exception.NotFoundException
-import ru.spbstu.memory.cards.domain.exception.UnauthorizedException
-import ru.spbstu.memory.cards.domain.exception.ValidationDomainException
-import ru.spbstu.memory.cards.exception.model.ApiError
-import ru.spbstu.memory.cards.exception.model.ApiErrorCode
-import ru.spbstu.memory.cards.exception.model.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.api.ApiError
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
+import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.domain.ConflictException
+import ru.spbstu.memory.cards.exception.domain.ForbiddenException
+import ru.spbstu.memory.cards.exception.domain.LimitExceededException
+import ru.spbstu.memory.cards.exception.domain.NotFoundException
+import ru.spbstu.memory.cards.exception.domain.UnauthorizedException
+import ru.spbstu.memory.cards.exception.domain.ValidationDomainException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -149,10 +150,12 @@ class GlobalExceptionHandler {
         )
 
     @ExceptionHandler(Throwable::class)
-    fun handleAny(ex: Throwable): ResponseEntity<ApiError> =
-        error(
+    fun handleAny(ex: Throwable): ResponseEntity<ApiError> {
+        LoggerFactory.getLogger(javaClass).error("Unhandled exception", ex)
+        return error(
             status = HttpStatus.INTERNAL_SERVER_ERROR,
             code = ApiErrorCode.INTERNAL_ERROR,
             description = ApiErrorDescription.INTERNAL_ERROR,
         )
+    }
 }

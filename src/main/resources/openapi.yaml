@@ -1,0 +1,617 @@
+openapi: 3.0.3
+info:
+  title: Quizlet API (v1)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Decks
+  - name: Cards
+  - name: Study
+  - name: Share
+
+security:
+  - sessionAuth: []
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 0, default: 0 }
+      required: false
+    Size:
+      in: query
+      name: size
+      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+      required: false
+    Sort:
+      in: query
+      name: sort
+      schema:
+        type: array
+        items: { type: string, example: "createdAt,desc" }
+        default: [ "createdAt,desc" ]
+      style: form
+      explode: true
+      required: false
+
+  responses:
+    UnprocessableEntity:
+      description: Unprocessable Entity (limit exceeded)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            limit_exceeded:
+              value:
+                code: "limit_exceeded"
+                message: "Достигнут максимальный лимит колод для пользователя (30)."
+                details: { limit: 30 }
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            unauthorized:
+              value: { code: "unauthorized", message: "Не авторизован" }
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            forbidden:
+              value: { code: "forbidden", message: "Доступ запрещён" }
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            not_found:
+              value: { code: "not_found", message: "Ресурс не найден" }
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            conflict:
+              value: { code: "conflict", message: "Ресурс уже существует" }
+    ValidationError:
+      description: Validation Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            validation_error:
+              value:
+                code: "validation_error"
+                message: "Проверьте корректность введённых данных"
+                details: { field: "ошибка" }
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: object
+          additionalProperties: true
+    PageResponse:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items: { type: object }
+        page: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 1, maximum: 200 }
+        totalElements: { type: integer, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
+
+    User:
+      type: object
+      required: [id, email, login, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        login: { type: string, minLength: 3, maxLength: 64 }
+        createdAt: { type: string, format: date-time }
+
+    Deck:
+      type: object
+      required: [id, name, cardCount, learnedPercent, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 90 }
+        description: { type: string, nullable: true, maxLength: 200 }
+        cardCount: { type: integer, minimum: 0 }
+        learnedPercent: { type: integer, minimum: 0, maximum: 100 }
+        lastStudied: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Card:
+      type: object
+      required: [id, question, answer, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        question: { type: string, minLength: 1, maxLength: 200 }
+        answer: { type: string, minLength: 1, maxLength: 200 }
+        isLearned : { type: boolean}
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        
+    CardForStudy:
+      type: object
+      required: [id, question, answer, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        question: { type: string, minLength: 1, maxLength: 200 }
+        answer: { type: string, minLength: 1, maxLength: 200 }
+
+    RegisterRequest:
+      type: object
+      required: [email, login, password]
+      properties:
+        email: { type: string, format: email }
+        login:
+          type: string
+          minLength: 3
+          maxLength: 64
+          example: "login"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+          pattern: "^[A-Za-z0-9_.-]+$"
+        
+    LoginRequest:
+      type: object
+      required: [login, password]
+      properties:
+        login: { type: string }
+        password: { type: string }
+    UpdateUserRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        login:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: "^[A-Za-z0-9_.-]+$"
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 64
+
+    CreateDeckRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 90 }
+        description: { type: string, maxLength: 200, nullable: true }
+    UpdateDeckRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 90 }
+        description: { type: string, maxLength: 200, nullable: true }
+
+    CreateCardRequest:
+      type: object
+      required: [question, answer]
+      properties:
+        question: { type: string, minLength: 1, maxLength: 200 }
+        answer: { type: string, minLength: 1, maxLength: 200 }
+    UpdateCardRequest:
+      type: object
+      properties:
+        question: { type: string, minLength: 1, maxLength: 200 }
+        answer: { type: string, minLength: 1, maxLength: 200 }
+
+    StudyAnswerRequest:
+      type: object
+      required: [cardId, status]
+      properties:
+        cardId: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [remembered, forgotten]
+
+    ShareResponse:
+      type: object
+      required: [token, url]
+      properties:
+        token: { type: string }
+        url: { type: string, format: uri }
+
+paths:
+
+
+  /api/v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Регистрация пользователя
+      security: []  # публично
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201': { description: Created }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Вход
+      security: [] 
+      requestBody:
+        required: true
+        content:
+          application/json: 
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: OK
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Выход
+      parameters: []
+      responses:
+        '200': { description: OK }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/users/me:
+    get:
+      tags: [Users]
+      summary: Профиль текущего пользователя
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/User' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Users]
+      summary: Обновить email/login
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateUserRequest' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Users]
+      summary: Удалить аккаунт со всеми данными
+      parameters: []
+      responses:
+        '204': { description: No Content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/users/me/password:
+    put:
+      tags: [Users]
+      summary: Смена пароля
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/decks:
+    get:
+      tags: [Decks]
+      summary: Список колод текущего пользователя
+      parameters:
+
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Deck' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Decks]
+      summary: Создать колоду
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateDeckRequest' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Deck' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/v1/decks/{deckId}:
+    parameters:
+      - in: path
+        name: deckId
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Decks]
+      summary: Детали колоды (владельца)
+      parameters: []
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Deck' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Decks]
+      summary: Обновить колоду (имя/описание)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateDeckRequest' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Deck' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Decks]
+      summary: Удалить колоду
+      parameters: []
+      responses:
+        '200': { description: OK }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/decks/{deckId}/cards:
+    parameters:
+      - in: path
+        name: deckId
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [Cards]
+      summary: Список карточек колоды
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Card' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Cards]
+      summary: Добавить карточку 
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCardRequest' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/decks/{deckId}/cards/{cardId}:
+    parameters:
+      - in: path
+        name: deckId
+        required: true
+        schema: { type: string, format: uuid }
+      - in: path
+        name: cardId
+        required: true
+        schema: { type: string, format: uuid }
+    put:
+      tags: [Cards]
+      summary: Обновить карточку
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateCardRequest' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Cards]
+      summary: Удалить карточку
+      parameters: []
+      responses:
+        '204': { description: No Content }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/study/{deckId}/cards:
+    post:
+      tags: [Study]
+      summary: Получить карточки для обучения
+      parameters:
+        - in: path
+          name: deckId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/CardForStudy' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+
+  /api/v1/study/{deckId}/answer:
+    post:
+      tags: [Study]
+      summary: Зафиксировать результат по карточке
+      parameters:
+        - in: path
+          name: deckId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StudyAnswerRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  learnedPercent: { type: integer, minimum: 0, maximum: 100 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/decks/{deckId}/share:
+    post:
+      tags: [Share]
+      summary: Получить токен, чтобы поделиться колодой
+      parameters:
+        - in: path
+          name: deckId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/ShareResponse' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/share/{token}:
+    get:
+      tags: [Share]
+      summary: Просмотр расшаренной колоды
+      security: [] 
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name: { type: string }
+                  description: { type: string, nullable: true }
+                  cardCount: { type: integer, minimum: 0 }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/share/{token}/import:
+    post:
+      tags: [Share]
+      summary: Импортировать общую колоду себе
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newName: { type: string, minLength: 1, maxLength: 90 }
+                description: { type: string, maxLength: 200 }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Deck' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+
+
+

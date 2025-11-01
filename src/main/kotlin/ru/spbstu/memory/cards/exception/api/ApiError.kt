@@ -1,4 +1,4 @@
-package ru.spbstu.memory.cards.exception.model
+package ru.spbstu.memory.cards.exception.api
 
 data class ApiError(
     val code: String,
