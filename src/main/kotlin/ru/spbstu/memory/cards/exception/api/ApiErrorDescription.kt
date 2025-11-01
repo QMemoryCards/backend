@@ -1,4 +1,4 @@
-package ru.spbstu.memory.cards.exception.model
+package ru.spbstu.memory.cards.exception.api
 
 enum class ApiErrorDescription(val description: String) {
     VALIDATION_ERROR("Проверьте корректность введённых данных"),
