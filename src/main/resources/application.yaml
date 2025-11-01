@@ -10,7 +10,7 @@ spring:
     password: password
     driver-class-name: org.postgresql.Driver
   liquibase:
-    enabled: false #TODO: поменять на true после создания таблиц в бд
+    enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
     default-schema: public
 
