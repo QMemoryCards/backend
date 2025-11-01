@@ -54,7 +54,7 @@ class SecurityConfig(
                     .requestMatchers("/api/v1/auth/login").permitAll()
                     .requestMatchers("/api/v1/share/**").permitAll()
                     .requestMatchers("/api/v1/auth/logout").permitAll()
-                    .requestMatchers(("actuator/health")).permitAll()
+                    .requestMatchers(("/actuator/health")).permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { it.disable() }
