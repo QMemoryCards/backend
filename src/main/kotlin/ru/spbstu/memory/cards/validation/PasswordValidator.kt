@@ -32,7 +32,7 @@ class PasswordValidator : ConstraintValidator<ValidPassword, String> {
         private val specialChars: Set<Char> =
             setOf(
                 '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '-', '+', '=',
-                '{', '[', '}', '}',
+                '{', '[', '}', ']',
                 '|', '\\', ':', ';', '"', '\'', '<', ',', '>', '.', '?', '/',
             )
     }
