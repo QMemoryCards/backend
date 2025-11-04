@@ -1,6 +1,6 @@
-package ru.spbstu.memory.cards.domain.exception
+package ru.spbstu.memory.cards.exception.domain
 
-import ru.spbstu.memory.cards.exception.model.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
 
 class ConflictException(
     message: String = ApiErrorDescription.CONFLICT.description,
