@@ -1,4 +1,4 @@
-package ru.spbstu.memory.cards.service.auth
+package ru.spbstu.memory.cards.service.user
 
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
