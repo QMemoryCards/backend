@@ -35,15 +35,7 @@ class SecurityConfig(
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .csrf { csrf ->
-                csrf.ignoringRequestMatchers(
-                    AntPathRequestMatcher("/api/v1/auth/register", "POST"),
-                    AntPathRequestMatcher("/api/v1/auth/login", "POST"),
-                    AntPathRequestMatcher("/api/v1/auth/logout", "POST"),
-                    AntPathRequestMatcher("/api/v1/share/**"),
-                )
-            }
+        http.csrf { it.disable() }
             .sessionManagement { session ->
                 session
                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
