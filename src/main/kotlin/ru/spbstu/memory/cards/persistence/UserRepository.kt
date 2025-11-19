@@ -1,7 +1,6 @@
 package ru.spbstu.memory.cards.persistence
 
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -23,8 +22,7 @@ class UserRepository {
             UserTable
                 .selectAll()
                 .where { UserTable.id eq id }
-                .limit(1)
-                .firstOrNull()
+                .singleOrNull()
                 ?.toUser()
         }
 
@@ -56,7 +54,7 @@ class UserRepository {
                 .not()
         }
 
-    fun existsByEmailAndIdNot(
+    fun existsByEmailAndId(
         email: String,
         id: UUID,
     ): Boolean =
@@ -65,10 +63,9 @@ class UserRepository {
                 .selectAll()
                 .where { (UserTable.email eq email) and (UserTable.id neq id) }
                 .empty()
-                .not()
         }
 
-    fun existsByLoginAndIdNot(
+    fun existsByLoginAndId(
         login: String,
         id: UUID,
     ): Boolean =
@@ -77,7 +74,6 @@ class UserRepository {
                 .selectAll()
                 .where { (UserTable.login eq login) and (UserTable.id neq id) }
                 .empty()
-                .not()
         }
 
     fun saveNew(
