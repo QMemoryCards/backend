@@ -10,7 +10,6 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import ru.spbstu.memory.cards.service.auth.AppUserDetailsService
 
 @Configuration
@@ -35,15 +34,7 @@ class SecurityConfig(
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .csrf { csrf ->
-                csrf.ignoringRequestMatchers(
-                    AntPathRequestMatcher("/api/v1/auth/register", "POST"),
-                    AntPathRequestMatcher("/api/v1/auth/login", "POST"),
-                    AntPathRequestMatcher("/api/v1/auth/logout", "POST"),
-                    AntPathRequestMatcher("/api/v1/share/**"),
-                )
-            }
+        http.csrf { it.disable() }
             .sessionManagement { session ->
                 session
                     .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
