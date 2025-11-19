@@ -14,8 +14,8 @@ import ru.spbstu.memory.cards.dto.request.UpdateUserRequest
 import ru.spbstu.memory.cards.dto.response.UserResponse
 import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.domain.UnauthorizedException
-import ru.spbstu.memory.cards.service.user.UserService
 import ru.spbstu.memory.cards.service.auth.model.AppUserDetails
+import ru.spbstu.memory.cards.service.user.UserService
 import java.time.format.DateTimeFormatter
 
 @RestController
