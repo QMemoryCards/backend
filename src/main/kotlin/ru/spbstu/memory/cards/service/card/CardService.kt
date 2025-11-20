@@ -28,7 +28,7 @@ class CardService(
         val deck =
             deckRepository.findById(deckId)
                 ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (deck.userId != userId) throw ForbiddenException("Access denied")
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
         val (cards, total) = cardRepository.findAllByDeckIdPaginated(deckId, page, size)
         val totalPages = if (size > 0) ceil(total.toDouble() / size).toInt() else 0
@@ -51,9 +51,9 @@ class CardService(
             val deck =
                 deckRepository.findById(deckId)
                     ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-            if (deck.userId != userId) throw ForbiddenException("Access denied")
+            if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
             if (deck.cardsCount >= 30) {
-                throw LimitExceededException("Deck cannot have more than 30 cards")
+                throw LimitExceededException(ApiErrorDescription.LIMIT_EXCEEDED.description)
             }
             val card = cardRepository.saveNew(deckId, req.question, req.answer)
             val updatedDeck = deck.copy(cardsCount = deck.cardsCount + 1)
@@ -71,13 +71,13 @@ class CardService(
         val deck =
             deckRepository.findById(deckId)
                 ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (deck.userId != userId) throw ForbiddenException("Access denied")
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
         val card =
             cardRepository.findById(cardId)
-                ?: throw NotFoundException("Card not found")
+                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
 
-        if (card.deckId != deckId) throw NotFoundException("Card not found in this deck")
+        if (card.deckId != deckId) throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
 
         val updatedCard = card.copy(question = req.question, answer = req.answer)
         return CardResponse.from(cardRepository.update(updatedCard))
@@ -91,10 +91,10 @@ class CardService(
         val deck =
             deckRepository.findById(deckId)
                 ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (deck.userId != userId) throw ForbiddenException("Access denied")
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
-        val card = cardRepository.findById(cardId) ?: throw NotFoundException("Card not found")
-        if (card.deckId != deckId) throw NotFoundException("Card not found in this deck")
+        val card = cardRepository.findById(cardId) ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+        if (card.deckId != deckId) throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
 
         cardRepository.delete(cardId)
 
