@@ -42,8 +42,7 @@ class DeckRepository {
             val decks =
                 query
                     .orderBy(
-                        DeckTable.createdAt to SortOrder.DESC,
-                        DeckTable.id to SortOrder.ASC,
+                        DeckTable.createdAt to SortOrder.DESC
                     )
                     .limit(count = size)
                     .offset(start = (page * size).toLong())

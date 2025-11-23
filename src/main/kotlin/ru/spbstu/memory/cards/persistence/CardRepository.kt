@@ -40,8 +40,7 @@ class CardRepository {
             val cards =
                 query
                     .orderBy(
-                        CardTable.createdAt to SortOrder.ASC,
-                        CardTable.id to SortOrder.ASC,
+                        CardTable.createdAt to SortOrder.ASC
                     )
                     .limit(count = size)
                     .offset(start = (page * size).toLong())
