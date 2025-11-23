@@ -15,5 +15,5 @@ class AppUserDetailsService(
     override fun loadUserByUsername(username: String): UserDetails =
         userRepository.findByLogin(username)?.let {
             AppUserDetails(it)
-        } ?: throw UsernameNotFoundException(ApiErrorCode.NOT_FOUND.code)
+        } ?: throw UsernameNotFoundException(ApiErrorCode.USER_NOT_FOUND.code)
 }

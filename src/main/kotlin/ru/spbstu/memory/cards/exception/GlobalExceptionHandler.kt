@@ -2,7 +2,6 @@ package ru.spbstu.memory.cards.exception
 
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -14,7 +13,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
-import org.springframework.web.servlet.NoHandlerFoundException
 import ru.spbstu.memory.cards.exception.api.ApiError
 import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
@@ -124,19 +122,19 @@ class GlobalExceptionHandler {
             description = ApiErrorDescription.FORBIDDEN,
         )
 
-    @ExceptionHandler(NotFoundException::class, NoHandlerFoundException::class)
-    fun handleNotFound(ex: Exception): ResponseEntity<ApiError> =
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFound(ex: NotFoundException): ResponseEntity<ApiError> =
         error(
             status = HttpStatus.NOT_FOUND,
-            code = ApiErrorCode.NOT_FOUND,
+            code = ex.code,
             description = ApiErrorDescription.NOT_FOUND,
         )
 
-    @ExceptionHandler(ConflictException::class, DataIntegrityViolationException::class)
-    fun handleConflict(ex: Exception): ResponseEntity<ApiError> =
+    @ExceptionHandler(ConflictException::class)
+    fun handleConflict(ex: ConflictException): ResponseEntity<ApiError> =
         error(
             status = HttpStatus.CONFLICT,
-            code = ApiErrorCode.CONFLICT,
+            code = ex.code,
             description = ApiErrorDescription.CONFLICT,
         )
 
@@ -144,7 +142,7 @@ class GlobalExceptionHandler {
     fun handleLimitExceeded(ex: LimitExceededException): ResponseEntity<ApiError> =
         errorMessage(
             status = HttpStatus.UNPROCESSABLE_ENTITY,
-            code = ApiErrorCode.LIMIT_EXCEEDED,
+            code = ex.code,
             message = ex.message ?: ApiErrorDescription.LIMIT_EXCEEDED.description,
             details = ex.details,
         )

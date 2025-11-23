@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import ru.spbstu.memory.cards.dto.request.UpdatePasswordRequest
 import ru.spbstu.memory.cards.dto.request.UpdateUserRequest
 import ru.spbstu.memory.cards.dto.response.UserResponse
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
 import ru.spbstu.memory.cards.exception.domain.ConflictException
 import ru.spbstu.memory.cards.exception.domain.ForbiddenException
@@ -23,15 +24,15 @@ class UserService(
         request: UpdateUserRequest,
     ): UserResponse {
         if (!userRepository.existsByEmailAndId(request.email, userId)) {
-            throw ConflictException(ApiErrorDescription.CONFLICT.description)
+            throw ConflictException(code = ApiErrorCode.EMAIL_CONFLICT)
         }
         if (!userRepository.existsByLoginAndId(request.login, userId)) {
-            throw ConflictException(ApiErrorDescription.CONFLICT.description)
+            throw ConflictException(code = ApiErrorCode.LOGIN_CONFLICT)
         }
 
         val user =
             userRepository.findById(userId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(code = ApiErrorCode.USER_NOT_FOUND)
 
         val updatedUser =
             user.copy(
@@ -55,7 +56,7 @@ class UserService(
     ) {
         val user =
             userRepository.findById(userId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(code = ApiErrorCode.USER_NOT_FOUND)
 
         if (!passwordEncoder.matches(request.currentPassword, user.passwordHash)) {
             throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
@@ -67,7 +68,7 @@ class UserService(
 
     fun deleteUser(userId: UUID) {
         if (userRepository.findById(userId) == null) {
-            throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+            throw NotFoundException(code = ApiErrorCode.USER_NOT_FOUND)
         }
         userRepository.delete(userId)
     }
