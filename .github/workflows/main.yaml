@@ -26,8 +26,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: $JAVA_DISTRIBUTION
-          java-version: $JAVA_VERSION
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Set up Gradle with caching
         uses: gradle/actions/setup-gradle@v3
@@ -55,8 +55,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: $JAVA_DISTRIBUTION
-          java-version: $JAVA_VERSION
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Set up Gradle with caching
         uses: gradle/actions/setup-gradle@v3
@@ -76,8 +76,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: $JAVA_DISTRIBUTION
-          java-version: $JAVA_VERSION
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
 
       - name: Set up Gradle with caching
         uses: gradle/actions/setup-gradle@v3
@@ -122,6 +122,9 @@ jobs:
       - name: Enable BuildKit
         run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
 
+      - name: Define image name env
+        run: echo "$IMAGE_NAME=${GITHUB_REPO,,}" >>${GITHUB_ENV}
+
       - name: Set up Gradle with caching
         uses: gradle/actions/setup-gradle@v3
 
@@ -165,6 +168,9 @@ jobs:
 
       - name: Enable BuildKit
         run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+
+      - name: Define image name env
+        run: echo "$IMAGE_NAME=${GITHUB_REPO,,}" >>${GITHUB_ENV}
 
       - name: Set up Gradle with caching
         uses: gradle/actions/setup-gradle@v3
