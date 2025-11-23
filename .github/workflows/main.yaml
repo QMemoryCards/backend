@@ -149,7 +149,7 @@ jobs:
   quick-test:
     name: Quick Test
     runs-on: ubuntu-latest
-    needs: test
+    needs: docker-image
 
     steps:
       - uses: actions/checkout@v3
