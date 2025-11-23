@@ -10,7 +10,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  GITHUB_REPO: ${{ github.repository }}
+  JAVA_DISTRIBUTION: temurin
+  JAVA_VERSION: 21
 
 jobs:
   static-analysis:
@@ -24,16 +26,11 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: 21
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-cache-${{ runner.os }}-
+      - name: Set up Gradle with caching
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Install dependencies
         run: ./gradlew dependencies
@@ -58,25 +55,14 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: 21
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-cache-${{ runner.os }}-
+      - name: Set up Gradle with caching
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build project
         run: ./gradlew build -x ktlintCheck
-
-      - name: Save build outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: build/libs
 
   test:
     name: Run Tests
@@ -90,22 +76,43 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: 21
+          distribution: $JAVA_DISTRIBUTION
+          java-version: $JAVA_VERSION
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.gradle/caches
-          key: gradle-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-cache-${{ runner.os }}-
+      - name: Set up Gradle with caching
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Run tests
         run: ./gradlew test -x ktlintCheck
 
+  docker-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      image-tag: ${{ steps.meta.outputs.image-tag }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Enable BuildKit
+        run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+
+      - name: Set up Gradle with caching
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Define image name env
+        run: echo "$IMAGE_NAME=${GITHUB_REPO,,}" >>${GITHUB_ENV}
+
+      - name: Build image
+        run: |
+          docker build \
+          --cache-from=type=gha \
+          --cache-to=type=gha,mode=max \
+          -t $REGISTRY/$IMAGE_NAME:latest .
+
   quick-test:
-    name: Docker Compose Health Check
+    name: Quick Test
     runs-on: ubuntu-latest
     needs: test
 
@@ -115,13 +122,25 @@ jobs:
       - name: Enable BuildKit
         run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
 
-      - name: Build and start services
-        run: docker compose up --build -d
+      - name: Set up Gradle with caching
+        uses: gradle/actions/setup-gradle@v3
 
-      - name: Wait for health endpoint
+      - name: Build and start services
+        run: |
+          echo "Building"
+          docker build \
+            --cache-from=type=gha \
+            --cache-to=type=gha,mode=max \
+            -t $REGISTRY/$IMAGE_NAME:latest .
+          echo "Running"
+          docker compose up -d
+
+      - name: Check health endpoint
         run: |
           for i in {1..40}; do
+            echo "Checking health endpoint (attempt $i)..."
             if curl -fs http://localhost:8080/actuator/health > /dev/null; then
+              echo "Health check passed: application is ready"
               exit 0
             fi
             sleep 3
@@ -144,10 +163,20 @@ jobs:
       - name: Log in
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Enable BuildKit
+        run: echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+
+      - name: Set up Gradle with caching
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Build image
         # if some time we need versioning, we can use tags here
         # like :${{ github.sha }} or :${{ github.ref_name }}-${{ github.sha }}
-        run: docker build -t $REGISTRY/$IMAGE_NAME:latest .
+        run: |
+          docker build \
+          --cache-from=type=gha \
+          --cache-to=type=gha,mode=max \
+          -t $REGISTRY/$IMAGE_NAME:latest .
 
       - name: Push image
         run: docker push $REGISTRY/$IMAGE_NAME:latest
