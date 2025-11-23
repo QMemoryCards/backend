@@ -2,6 +2,7 @@ package ru.spbstu.memory.cards.config.auth
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
@@ -34,18 +35,20 @@ class SecurityConfig(
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http.csrf { it.disable() }
+        http
+            .cors { }
+            .csrf { it.disable() }
             .sessionManagement { session ->
-                session
-                    .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             }
             .authorizeHttpRequests { auth ->
                 auth
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/api/v1/auth/register").permitAll()
                     .requestMatchers("/api/v1/auth/login").permitAll()
                     .requestMatchers("/api/v1/share/**").permitAll()
                     .requestMatchers("/api/v1/auth/logout").permitAll()
-                    .requestMatchers(("/actuator/health")).permitAll()
+                    .requestMatchers("/actuator/health").permitAll()
                     .anyRequest().authenticated()
             }
             .formLogin { it.disable() }
@@ -53,7 +56,6 @@ class SecurityConfig(
             .logout { it.disable() }
 
         http.authenticationProvider(authenticationProvider())
-
         return http.build()
     }
 }
