@@ -4,15 +4,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Service
 import ru.spbstu.memory.cards.dto.request.CreateCardRequest
 import ru.spbstu.memory.cards.dto.response.CardResponse
-import ru.spbstu.memory.cards.dto.response.PageResponse
-import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.domain.ForbiddenException
 import ru.spbstu.memory.cards.exception.domain.LimitExceededException
 import ru.spbstu.memory.cards.exception.domain.NotFoundException
 import ru.spbstu.memory.cards.persistence.CardRepository
 import ru.spbstu.memory.cards.persistence.DeckRepository
+import ru.spbstu.memory.cards.persistence.mapper.toResponse
+import ru.spbstu.memory.cards.persistence.model.PaginatedResult
 import java.util.UUID
-import kotlin.math.ceil
 
 @Service
 class CardService(
@@ -24,21 +24,17 @@ class CardService(
         userId: UUID,
         page: Int,
         size: Int,
-    ): PageResponse<CardResponse> {
+    ): PaginatedResult<CardResponse> {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
 
-        val (cards, total) = cardRepository.findAllByDeckIdPaginated(deckId, page, size)
-        val totalPages = if (size > 0) ceil(total.toDouble() / size).toInt() else 0
+        val repoResult = cardRepository.findAllByDeckIdPaginated(deckId, page, size)
 
-        return PageResponse(
-            content = cards.map { CardResponse.from(it) },
-            totalElements = total,
-            totalPages = totalPages,
-            page = page,
-            size = size,
+        return PaginatedResult(
+            items = repoResult.items.map { it.toResponse() },
+            total = repoResult.total,
         )
     }
 
@@ -50,16 +46,19 @@ class CardService(
         transaction {
             val deck =
                 deckRepository.findById(deckId)
-                    ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-            if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+                    ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
+            if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
+
             if (deck.cardsCount >= 30) {
-                throw LimitExceededException(ApiErrorDescription.LIMIT_EXCEEDED.description)
+                throw LimitExceededException(ApiErrorCode.LIMIT_EXCEEDED.code)
             }
+
             val card = cardRepository.saveNew(deckId, req.question, req.answer)
+
             val updatedDeck = deck.copy(cardsCount = deck.cardsCount + 1)
             deckRepository.update(updatedDeck)
 
-            CardResponse.from(card)
+            card.toResponse()
         }
 
     fun updateCard(
@@ -70,17 +69,16 @@ class CardService(
     ): CardResponse {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
 
         val card =
             cardRepository.findById(cardId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-
-        if (card.deckId != deckId) throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
+        if (card.deckId != deckId) throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
 
         val updatedCard = card.copy(question = req.question, answer = req.answer)
-        return CardResponse.from(cardRepository.update(updatedCard))
+        return cardRepository.update(updatedCard).toResponse()
     }
 
     fun deleteCard(
@@ -90,11 +88,13 @@ class CardService(
     ) = transaction {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
 
-        val card = cardRepository.findById(cardId) ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-        if (card.deckId != deckId) throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+        val card =
+            cardRepository.findById(cardId)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
+        if (card.deckId != deckId) throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
 
         cardRepository.delete(cardId)
 

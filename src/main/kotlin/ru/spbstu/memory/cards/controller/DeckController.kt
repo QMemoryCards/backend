@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController
 import ru.spbstu.memory.cards.dto.request.CreateDeckRequest
 import ru.spbstu.memory.cards.dto.response.DeckResponse
 import ru.spbstu.memory.cards.dto.response.PageResponse
-import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.domain.UnauthorizedException
+import ru.spbstu.memory.cards.persistence.mapper.PageMapper
 import ru.spbstu.memory.cards.service.auth.model.AppUserDetails
 import ru.spbstu.memory.cards.service.deck.DeckService
 import java.util.UUID
@@ -31,17 +32,18 @@ class DeckController(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): PageResponse<DeckResponse> {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
-        return deckService.getDecks(userId, page, size)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
+        val result = deckService.getDecks(userId, page, size)
+        return PageMapper.toPageResponse(result, page, size)
     }
 
     @PostMapping
     fun createDeck(
         @AuthenticationPrincipal principal: AppUserDetails?,
-        @Valid @RequestBody request: CreateDeckRequest,
+        @Valid @RequestBody req: CreateDeckRequest,
     ): DeckResponse {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
-        return deckService.createDeck(userId, request)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
+        return deckService.createDeck(userId, req)
     }
 
     @GetMapping("/{deckId}")
@@ -49,7 +51,7 @@ class DeckController(
         @AuthenticationPrincipal principal: AppUserDetails?,
         @PathVariable deckId: UUID,
     ): DeckResponse {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
         return deckService.getDeck(deckId, userId)
     }
 
@@ -57,10 +59,10 @@ class DeckController(
     fun updateDeck(
         @AuthenticationPrincipal principal: AppUserDetails?,
         @PathVariable deckId: UUID,
-        @Valid @RequestBody request: CreateDeckRequest,
+        @Valid @RequestBody req: CreateDeckRequest,
     ): DeckResponse {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
-        return deckService.updateDeck(deckId, userId, request)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
+        return deckService.updateDeck(deckId, userId, req)
     }
 
     @DeleteMapping("/{deckId}")
@@ -68,7 +70,7 @@ class DeckController(
         @AuthenticationPrincipal principal: AppUserDetails?,
         @PathVariable deckId: UUID,
     ) {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
         deckService.deleteDeck(deckId, userId)
     }
 }

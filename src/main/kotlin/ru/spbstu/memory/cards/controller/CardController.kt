@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController
 import ru.spbstu.memory.cards.dto.request.CreateCardRequest
 import ru.spbstu.memory.cards.dto.response.CardResponse
 import ru.spbstu.memory.cards.dto.response.PageResponse
-import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.domain.UnauthorizedException
+import ru.spbstu.memory.cards.persistence.mapper.PageMapper
 import ru.spbstu.memory.cards.service.auth.model.AppUserDetails
 import ru.spbstu.memory.cards.service.card.CardService
 import java.util.UUID
@@ -32,18 +33,21 @@ class CardController(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
     ): PageResponse<CardResponse> {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
-        return cardService.getCards(deckId, userId, page, size)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
+
+        val result = cardService.getCards(deckId, userId, page, size)
+
+        return PageMapper.toPageResponse(result, page, size)
     }
 
     @PostMapping
     fun createCard(
         @AuthenticationPrincipal principal: AppUserDetails?,
         @PathVariable deckId: UUID,
-        @Valid @RequestBody request: CreateCardRequest,
+        @Valid @RequestBody req: CreateCardRequest,
     ): CardResponse {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
-        return cardService.createCard(deckId, userId, request)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
+        return cardService.createCard(deckId, userId, req)
     }
 
     @PutMapping("/{cardId}")
@@ -51,10 +55,10 @@ class CardController(
         @AuthenticationPrincipal principal: AppUserDetails?,
         @PathVariable deckId: UUID,
         @PathVariable cardId: UUID,
-        @Valid @RequestBody request: CreateCardRequest,
+        @Valid @RequestBody req: CreateCardRequest,
     ): CardResponse {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
-        return cardService.updateCard(deckId, cardId, userId, request)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
+        return cardService.updateCard(deckId, cardId, userId, req)
     }
 
     @DeleteMapping("/{cardId}")
@@ -63,7 +67,7 @@ class CardController(
         @PathVariable deckId: UUID,
         @PathVariable cardId: UUID,
     ) {
-        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorDescription.UNAUTHORIZED.description)
+        val userId = principal?.getId() ?: throw UnauthorizedException(ApiErrorCode.UNAUTHORIZED.code)
         cardService.deleteCard(deckId, cardId, userId)
     }
 }

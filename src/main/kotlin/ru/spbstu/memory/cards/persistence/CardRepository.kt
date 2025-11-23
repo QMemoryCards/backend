@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository
 import ru.spbstu.memory.cards.persistence.mapper.toCard
 import ru.spbstu.memory.cards.persistence.mapper.toCardInsert
 import ru.spbstu.memory.cards.persistence.model.Card
+import ru.spbstu.memory.cards.persistence.model.PaginatedResult
 import ru.spbstu.memory.cards.persistence.table.CardTable
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -31,20 +32,22 @@ class CardRepository {
         deckId: UUID,
         page: Int,
         size: Int,
-    ): Pair<List<Card>, Long> =
+    ): PaginatedResult<Card> =
         transaction {
             val query = CardTable.selectAll().where { CardTable.deckId eq deckId }
-
-            val total = query.count()
+            val totalElements = query.count()
 
             val cards =
                 query
-                    .orderBy(CardTable.createdAt to SortOrder.ASC)
+                    .orderBy(
+                        CardTable.createdAt to SortOrder.ASC,
+                        CardTable.id to SortOrder.ASC,
+                    )
                     .limit(count = size)
                     .offset(start = (page * size).toLong())
                     .map { it.toCard() }
 
-            cards to total
+            PaginatedResult(cards, totalElements)
         }
 
     fun saveNew(

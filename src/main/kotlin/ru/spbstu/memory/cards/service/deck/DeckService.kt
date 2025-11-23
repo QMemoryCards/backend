@@ -3,15 +3,15 @@ package ru.spbstu.memory.cards.service.deck
 import org.springframework.stereotype.Service
 import ru.spbstu.memory.cards.dto.request.CreateDeckRequest
 import ru.spbstu.memory.cards.dto.response.DeckResponse
-import ru.spbstu.memory.cards.dto.response.PageResponse
-import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.domain.ConflictException
 import ru.spbstu.memory.cards.exception.domain.ForbiddenException
 import ru.spbstu.memory.cards.exception.domain.LimitExceededException
 import ru.spbstu.memory.cards.exception.domain.NotFoundException
 import ru.spbstu.memory.cards.persistence.DeckRepository
+import ru.spbstu.memory.cards.persistence.mapper.toResponse
+import ru.spbstu.memory.cards.persistence.model.PaginatedResult
 import java.util.UUID
-import kotlin.math.ceil
 
 @Service
 class DeckService(
@@ -19,36 +19,32 @@ class DeckService(
 ) {
     fun createDeck(
         userId: UUID,
-        request: CreateDeckRequest,
+        req: CreateDeckRequest,
     ): DeckResponse {
         val count = deckRepository.countByUserId(userId)
         if (count >= 30) {
-            throw LimitExceededException(ApiErrorDescription.LIMIT_EXCEEDED.description)
+            throw LimitExceededException(ApiErrorCode.LIMIT_EXCEEDED.code)
         }
 
-        if (deckRepository.existsByUserIdAndName(userId, request.name)) {
-            throw ConflictException(ApiErrorDescription.CONFLICT.description)
+        if (deckRepository.existsByUserIdAndName(userId, req.name)) {
+            throw ConflictException(ApiErrorCode.CONFLICT.code)
         }
 
-        val deck = deckRepository.saveNew(userId, request.name, request.description)
-        return DeckResponse.from(deck)
+        val deck = deckRepository.saveNew(userId, req.name, req.description)
+        return deck.toResponse()
     }
 
     fun getDecks(
         userId: UUID,
         page: Int,
         size: Int,
-    ): PageResponse<DeckResponse> {
-        val (decks, total) = deckRepository.findAllByUserId(userId, page, size)
+    ): PaginatedResult<DeckResponse> {
+        val repoResult = deckRepository.findAllByUserId(userId, page, size)
+        val dtos = repoResult.items.map { it.toResponse() }
 
-        val totalPages = if (size > 0) ceil(total.toDouble() / size).toInt() else 0
-
-        return PageResponse(
-            content = decks.map { DeckResponse.from(it) },
-            totalElements = total,
-            totalPages = totalPages,
-            page = page,
-            size = size,
+        return PaginatedResult(
+            items = dtos,
+            total = repoResult.total,
         )
     }
 
@@ -58,34 +54,34 @@ class DeckService(
     ): DeckResponse {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
 
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
 
-        return DeckResponse.from(deck)
+        return deck.toResponse()
     }
 
     fun updateDeck(
         deckId: UUID,
         userId: UUID,
-        request: CreateDeckRequest,
+        req: CreateDeckRequest,
     ): DeckResponse {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
 
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
 
-        if (!deckRepository.existsByUserIdAndNameAndId(userId, request.name, deckId)) {
-            throw ConflictException(ApiErrorDescription.CONFLICT.description)
+        if (!deckRepository.existsByUserIdAndNameAndId(userId, req.name, deckId)) {
+            throw ConflictException(ApiErrorCode.CONFLICT.code)
         }
 
         val updatedDeck =
             deck.copy(
-                name = request.name,
-                description = request.description,
+                name = req.name,
+                description = req.description,
             )
-        return DeckResponse.from(deckRepository.update(updatedDeck))
+        return deckRepository.update(updatedDeck).toResponse()
     }
 
     fun deleteDeck(
@@ -94,9 +90,9 @@ class DeckService(
     ) {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(ApiErrorCode.NOT_FOUND.code)
 
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorCode.FORBIDDEN.code)
 
         deckRepository.delete(deckId)
     }

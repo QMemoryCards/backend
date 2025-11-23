@@ -2,9 +2,10 @@ package ru.spbstu.memory.cards.dto.response
 
 import ru.spbstu.memory.cards.persistence.model.Deck
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 data class DeckResponse(
-    val id: String,
+    val id: UUID,
     val name: String,
     val description: String?,
     val cardCount: Int,
@@ -16,7 +17,7 @@ data class DeckResponse(
     companion object {
         fun from(deck: Deck): DeckResponse =
             DeckResponse(
-                id = deck.id.toString(),
+                id = deck.id,
                 name = deck.name,
                 description = deck.description,
                 cardCount = deck.cardsCount,

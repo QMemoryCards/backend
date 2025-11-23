@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository
 import ru.spbstu.memory.cards.persistence.mapper.toDeck
 import ru.spbstu.memory.cards.persistence.mapper.toDeckInsert
 import ru.spbstu.memory.cards.persistence.model.Deck
+import ru.spbstu.memory.cards.persistence.model.PaginatedResult
 import ru.spbstu.memory.cards.persistence.table.DeckTable
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -33,17 +34,21 @@ class DeckRepository {
         userId: UUID,
         page: Int,
         size: Int,
-    ): Pair<List<Deck>, Long> =
+    ): PaginatedResult<Deck> =
         transaction {
             val query = DeckTable.selectAll().where { DeckTable.userId eq userId }
             val totalElements = query.count()
+
             val decks =
                 query
-                    .orderBy(DeckTable.createdAt to SortOrder.DESC)
+                    .orderBy(
+                        DeckTable.createdAt to SortOrder.DESC,
+                        DeckTable.id to SortOrder.ASC,
+                    )
                     .limit(count = size)
                     .offset(start = (page * size).toLong())
                     .map { it.toDeck() }
-            decks to totalElements
+            PaginatedResult(decks, totalElements)
         }
 
     fun countByUserId(userId: UUID): Long =
