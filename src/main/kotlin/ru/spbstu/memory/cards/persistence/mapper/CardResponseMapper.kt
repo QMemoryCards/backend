@@ -8,4 +8,5 @@ fun Card.toResponse(): CardResponse =
         id = this.id,
         question = this.question,
         answer = this.answer,
+        isLearned = this.isLearned,
     )

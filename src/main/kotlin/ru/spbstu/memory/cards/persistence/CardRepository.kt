@@ -2,6 +2,7 @@ package ru.spbstu.memory.cards.persistence
 
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -47,6 +48,21 @@ class CardRepository {
             PaginatedResult(cards, totalElements)
         }
 
+    fun findAllByDeckId(deckId: UUID): List<Card> =
+        transaction {
+            CardTable.selectAll()
+                .where { CardTable.deckId eq deckId }
+                .orderBy(CardTable.createdAt to SortOrder.ASC)
+                .map { it.toCard() }
+        }
+
+    fun getLearnedCount(deckId: UUID): Long =
+        transaction {
+            CardTable.selectAll()
+                .where { (CardTable.deckId eq deckId) and (CardTable.isLearned eq true) }
+                .count()
+        }
+
     fun saveNew(
         deckId: UUID,
         question: String,
@@ -83,6 +99,7 @@ class CardRepository {
                 it[question] = card.question
                 it[answer] = card.answer
                 it[updatedAt] = now
+                it[isLearned] = card.isLearned
             }
             card.copy(updatedAt = now)
         }

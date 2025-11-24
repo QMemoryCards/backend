@@ -10,4 +10,5 @@ data class Card(
     val answer: String,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,
+    val isLearned: Boolean = false,
 )

@@ -43,6 +43,20 @@ class CardService(
         )
     }
 
+    fun getAllCards(
+        deckId: UUID,
+        userId: UUID,
+    ): List<CardResponse> {
+        val deck =
+            deckRepository.findById(deckId)
+                ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)
+        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+
+        val cards = cardRepository.findAllByDeckId(deckId)
+
+        return cards.map { it.toResponse() }
+    }
+
     fun createCard(
         deckId: UUID,
         userId: UUID,

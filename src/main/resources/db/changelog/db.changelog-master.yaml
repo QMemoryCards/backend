@@ -1,3 +1,18 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changesets/001-create-tables.sql
+  - changeSet:
+      id: 002-add-learning
+      author: Alexander Ponomarev
+      changes:
+        - addColumn:
+            tableName: cards
+            columns:
+              - column:
+                  name: is_learned
+                  type: boolean
+                  defaultValueBoolean: false
+      rollback:
+        - dropColumn:
+            columnName: is_learned
+            tableName: cards
