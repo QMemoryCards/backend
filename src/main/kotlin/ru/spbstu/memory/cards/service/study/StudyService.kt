@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import ru.spbstu.memory.cards.dto.request.StudyAnswerRequest
 import ru.spbstu.memory.cards.dto.request.StudyStatusEnum
 import ru.spbstu.memory.cards.dto.response.StudyAnswerResponse
+import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.api.ApiErrorDescription
 import ru.spbstu.memory.cards.exception.domain.ForbiddenException
 import ru.spbstu.memory.cards.exception.domain.NotFoundException
@@ -26,13 +27,13 @@ class StudyService(
         transaction {
             val deck =
                 deckRepository.findById(deckId)
-                    ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                    ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)
             if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
             val card =
                 cardRepository.findById(req.cardId)
-                    ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
-            if (card.deckId != deckId) throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                    ?: throw NotFoundException(code = ApiErrorCode.CARD_NOT_FOUND)
+            if (card.deckId != deckId) throw NotFoundException(code = ApiErrorCode.CARD_NOT_FOUND)
 
             val updatedCard = card.copy(isLearned = req.status == StudyStatusEnum.REMEMBERED)
             cardRepository.update(updatedCard)

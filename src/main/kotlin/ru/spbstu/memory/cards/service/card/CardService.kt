@@ -49,7 +49,7 @@ class CardService(
     ): List<CardResponse> {
         val deck =
             deckRepository.findById(deckId)
-                ?: throw NotFoundException(ApiErrorDescription.NOT_FOUND.description)
+                ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)
         if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
         val cards = cardRepository.findAllByDeckId(deckId)
