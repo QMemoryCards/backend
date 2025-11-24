@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class WebCorsConfig : WebMvcConfigurer {
-    @Value("\${cors.originPatterns:default}")
+    @Value("\${cors.originPatterns:http://localhost:*}")
     private val corsOriginPatterns: String = ""
 
     override fun addCorsMappings(registry: CorsRegistry) {
