@@ -16,3 +16,24 @@ databaseChangeLog:
         - dropColumn:
             columnName: is_learned
             tableName: cards
+  - changeSet:
+      id: 003-add-deck-shares
+      author: Alexander Ponomarev
+      changes:
+        - createTable:
+            tableName: deck_shares
+            columns:
+              - column:
+                  name: deck_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    references:
+                      tableName: decks
+                      columnName: id
+              - column:
+                  name: token
+                  type: UUID
+                  constraints:
+                    nullable: false
+                    primaryKey: true

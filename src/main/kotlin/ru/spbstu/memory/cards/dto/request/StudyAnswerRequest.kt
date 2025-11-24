@@ -10,7 +10,7 @@ enum class StudyStatusEnum(
     FORGOTTEN("forgotten"),
 }
 
-class StudyAnswerRequest(
+data class StudyAnswerRequest(
     val cardId: UUID,
     val status: StudyStatusEnum,
 )
