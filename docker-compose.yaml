@@ -6,7 +6,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-memory_cards}
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    expose:
+    ports:
       - "5432:5432"
     networks:
       - internal
@@ -20,10 +20,23 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://memory-cards-db:5432/${POSTGRES_DB:-memory_cards}
       SPRING_DATASOURCE_USERNAME:  ${POSTGRES_USER:-user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      CORS_ORIGIN_PATTERNS: ${CORS_ORIGIN_PATTERNS:-http://frontend,http://localhost:*,http://localhost}
     ports:
       - "8080:8080"
     depends_on:
       - db
+    networks:
+      - internal
+
+  frontend:
+    image: ghcr.io/qmemorycards/frontend:latest
+    environment:
+      BACKEND_HOST: ${BACKEND_HOST:-backend}
+      BACKEND_PORT: ${BACKEND_PORT:-8080}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
     networks:
       - internal
 

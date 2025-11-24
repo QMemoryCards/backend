@@ -11,6 +11,7 @@ object CardTable : Table("cards") {
     val answer = varchar("answer", length = 200)
     val createdAt = timestampWithTimeZone("created_at")
     val updatedAt = timestampWithTimeZone("updated_at")
+    val isLearned = bool("is_learned").default(false)
 
     override val primaryKey = PrimaryKey(id)
 }

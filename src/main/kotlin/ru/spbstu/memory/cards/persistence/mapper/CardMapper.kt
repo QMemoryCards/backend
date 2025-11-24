@@ -15,6 +15,7 @@ fun ResultRow.toCard(): Card =
         answer = this[CardTable.answer],
         createdAt = this[CardTable.createdAt],
         updatedAt = this[CardTable.updatedAt],
+        isLearned = this[CardTable.isLearned],
     )
 
 fun InsertStatement<Number>.toCardInsert(

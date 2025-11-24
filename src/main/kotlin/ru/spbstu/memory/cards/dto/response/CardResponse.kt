@@ -6,4 +6,5 @@ data class CardResponse(
     val id: UUID,
     val question: String,
     val answer: String,
+    val isLearned: Boolean,
 )

@@ -16,9 +16,9 @@ spring:
   application:
     name: memory-cards-backend
   datasource:
-    url: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://localhost:5432/memory_cards}
-    username: ${SPRING_DATASOURCE_USERNAME:-user}
-    password: ${SPRING_DATASOURCE_PASSWORD:-password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/memory_cards}
+    username: ${SPRING_DATASOURCE_USERNAME:user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   liquibase:
     enabled: true
@@ -30,3 +30,6 @@ management:
     web:
       exposure:
         include: health,info
+
+cors:
+  originPatterns: ${CORS_ORIGIN_PATTERNS:http://frontend,http://localhost:*,http://localhost}

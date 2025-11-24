@@ -14,7 +14,7 @@ tags:
   - name: Share
 
 security:
-  - sessionAuth: []
+  - sessionAuth: [ ]
 
 components:
   securitySchemes:
@@ -104,7 +104,7 @@ components:
   schemas:
     Error:
       type: object
-      required: [code, message]
+      required: [ code, message ]
       properties:
         code: { type: string }
         message: { type: string }
@@ -113,7 +113,7 @@ components:
           additionalProperties: true
     PageResponse:
       type: object
-      required: [content, page, size, totalElements, totalPages]
+      required: [ content, page, size, totalElements, totalPages ]
       properties:
         content:
           type: array
@@ -125,7 +125,7 @@ components:
 
     User:
       type: object
-      required: [id, email, login, createdAt]
+      required: [ id, email, login, createdAt ]
       properties:
         id: { type: string, format: uuid }
         email: { type: string, format: email }
@@ -134,7 +134,7 @@ components:
 
     Deck:
       type: object
-      required: [id, name, cardCount, learnedPercent, createdAt, updatedAt]
+      required: [ id, name, cardCount, learnedPercent, createdAt, updatedAt ]
       properties:
         id: { type: string, format: uuid }
         name: { type: string, minLength: 1, maxLength: 90 }
@@ -147,26 +147,27 @@ components:
 
     Card:
       type: object
-      required: [id, question, answer, createdAt, updatedAt]
+      required: [ id, question, answer, createdAt, updatedAt ]
       properties:
         id: { type: string, format: uuid }
         question: { type: string, minLength: 1, maxLength: 200 }
         answer: { type: string, minLength: 1, maxLength: 200 }
-        isLearned : { type: boolean}
+        isLearned: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
-        
+
     CardForStudy:
       type: object
-      required: [id, question, answer, createdAt, updatedAt]
+      required: [ id, question, answer, createdAt, updatedAt ]
       properties:
         id: { type: string, format: uuid }
         question: { type: string, minLength: 1, maxLength: 200 }
         answer: { type: string, minLength: 1, maxLength: 200 }
+        isLearned: { type: boolean }
 
     RegisterRequest:
       type: object
-      required: [email, login, password]
+      required: [ email, login, password ]
       properties:
         email: { type: string, format: email }
         login:
@@ -179,10 +180,10 @@ components:
           minLength: 8
           maxLength: 64
           pattern: "^[A-Za-z0-9_.-]+$"
-        
+
     LoginRequest:
       type: object
-      required: [login, password]
+      required: [ login, password ]
       properties:
         login: { type: string }
         password: { type: string }
@@ -197,7 +198,7 @@ components:
           pattern: "^[A-Za-z0-9_.-]+$"
     ChangePasswordRequest:
       type: object
-      required: [currentPassword, newPassword]
+      required: [ currentPassword, newPassword ]
       properties:
         currentPassword: { type: string }
         newPassword:
@@ -207,7 +208,7 @@ components:
 
     CreateDeckRequest:
       type: object
-      required: [name]
+      required: [ name ]
       properties:
         name: { type: string, minLength: 1, maxLength: 90 }
         description: { type: string, maxLength: 200, nullable: true }
@@ -219,7 +220,7 @@ components:
 
     CreateCardRequest:
       type: object
-      required: [question, answer]
+      required: [ question, answer ]
       properties:
         question: { type: string, minLength: 1, maxLength: 200 }
         answer: { type: string, minLength: 1, maxLength: 200 }
@@ -231,16 +232,16 @@ components:
 
     StudyAnswerRequest:
       type: object
-      required: [cardId, status]
+      required: [ cardId, status ]
       properties:
         cardId: { type: string, format: uuid }
         status:
           type: string
-          enum: [remembered, forgotten]
+          enum: [ remembered, forgotten ]
 
     ShareResponse:
       type: object
-      required: [token, url]
+      required: [ token, url ]
       properties:
         token: { type: string }
         url: { type: string, format: uri }
@@ -250,9 +251,9 @@ paths:
 
   /api/v1/auth/register:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Регистрация пользователя
-      security: []  # публично
+      security: [ ]  # публично
       requestBody:
         required: true
         content:
@@ -265,13 +266,13 @@ paths:
 
   /api/v1/auth/login:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Вход
-      security: [] 
+      security: [ ]
       requestBody:
         required: true
         content:
-          application/json: 
+          application/json:
             schema: { $ref: '#/components/schemas/LoginRequest' }
       responses:
         '200':
@@ -280,27 +281,27 @@ paths:
 
   /api/v1/auth/logout:
     post:
-      tags: [Auth]
+      tags: [ Auth ]
       summary: Выход
-      parameters: []
+      parameters: [ ]
       responses:
         '200': { description: OK }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /api/v1/users/me:
     get:
-      tags: [Users]
+      tags: [ Users ]
       summary: Профиль текущего пользователя
-      parameters: []
+      parameters: [ ]
       responses:
         '200':
           description: OK
           content: { application/json: { schema: { $ref: '#/components/schemas/User' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
     put:
-      tags: [Users]
+      tags: [ Users ]
       summary: Обновить email/login
-      parameters: []
+      parameters: [ ]
       requestBody:
         required: true
         content:
@@ -312,18 +313,18 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { $ref: '#/components/responses/Conflict' }
     delete:
-      tags: [Users]
+      tags: [ Users ]
       summary: Удалить аккаунт со всеми данными
-      parameters: []
+      parameters: [ ]
       responses:
         '204': { description: No Content }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /api/v1/users/me/password:
     put:
-      tags: [Users]
+      tags: [ Users ]
       summary: Смена пароля
-      parameters: []
+      parameters: [ ]
       requestBody:
         required: true
         content:
@@ -336,7 +337,7 @@ paths:
 
   /api/v1/decks:
     get:
-      tags: [Decks]
+      tags: [ Decks ]
       summary: Список колод текущего пользователя
       parameters:
 
@@ -358,7 +359,7 @@ paths:
                         items: { $ref: '#/components/schemas/Deck' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
-      tags: [Decks]
+      tags: [ Decks ]
       summary: Создать колоду
 
       requestBody:
@@ -379,18 +380,18 @@ paths:
         required: true
         schema: { type: string, format: uuid }
     get:
-      tags: [Decks]
+      tags: [ Decks ]
       summary: Детали колоды (владельца)
-      parameters: []
+      parameters: [ ]
       responses:
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Deck' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     put:
-      tags: [Decks]
+      tags: [ Decks ]
       summary: Обновить колоду (имя/описание)
-      parameters: []
+      parameters: [ ]
       requestBody:
         required: true
         content:
@@ -404,9 +405,9 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
     delete:
-      tags: [Decks]
+      tags: [ Decks ]
       summary: Удалить колоду
-      parameters: []
+      parameters: [ ]
       responses:
         '200': { description: OK }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -420,7 +421,7 @@ paths:
         required: true
         schema: { type: string, format: uuid }
     get:
-      tags: [Cards]
+      tags: [ Cards ]
       summary: Список карточек колоды
       parameters:
         - $ref: '#/components/parameters/Page'
@@ -442,9 +443,9 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
-      tags: [Cards]
-      summary: Добавить карточку 
-      parameters: []
+      tags: [ Cards ]
+      summary: Добавить карточку
+      parameters: [ ]
       requestBody:
         required: true
         content:
@@ -468,9 +469,9 @@ paths:
         required: true
         schema: { type: string, format: uuid }
     put:
-      tags: [Cards]
+      tags: [ Cards ]
       summary: Обновить карточку
-      parameters: []
+      parameters: [ ]
       requestBody:
         required: true
         content:
@@ -483,9 +484,9 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
-      tags: [Cards]
+      tags: [ Cards ]
       summary: Удалить карточку
-      parameters: []
+      parameters: [ ]
       responses:
         '204': { description: No Content }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -493,8 +494,8 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
 
   /api/v1/study/{deckId}/cards:
-    post:
-      tags: [Study]
+    get:
+      tags: [ Study ]
       summary: Получить карточки для обучения
       parameters:
         - in: path
@@ -520,7 +521,7 @@ paths:
 
   /api/v1/study/{deckId}/answer:
     post:
-      tags: [Study]
+      tags: [ Study ]
       summary: Зафиксировать результат по карточке
       parameters:
         - in: path
@@ -548,7 +549,7 @@ paths:
 
   /api/v1/decks/{deckId}/share:
     post:
-      tags: [Share]
+      tags: [ Share ]
       summary: Получить токен, чтобы поделиться колодой
       parameters:
         - in: path
@@ -565,9 +566,9 @@ paths:
 
   /api/v1/share/{token}:
     get:
-      tags: [Share]
+      tags: [ Share ]
       summary: Просмотр расшаренной колоды
-      security: [] 
+      security: [ ]
       parameters:
         - in: path
           name: token
@@ -588,7 +589,7 @@ paths:
 
   /api/v1/share/{token}/import:
     post:
-      tags: [Share]
+      tags: [ Share ]
       summary: Импортировать общую колоду себе
       parameters:
         - in: path
