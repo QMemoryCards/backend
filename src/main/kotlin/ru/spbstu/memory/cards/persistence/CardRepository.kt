@@ -92,6 +92,37 @@ class CardRepository {
             )
         }
 
+    fun copyAllToDeck(
+        sourceDeckId: UUID,
+        targetDeckId: UUID,
+    ): Int {
+        var inserted = 0
+        transaction {
+            val cardsToCopy =
+                CardTable.selectAll()
+                    .where { CardTable.deckId eq sourceDeckId }
+                    .map { it.toCard() }
+
+            cardsToCopy.forEach { card ->
+                val now = OffsetDateTime.now()
+                val newId = UUID.randomUUID()
+                inserted +=
+                    CardTable.insert {
+                        it.toCardInsert(
+                            id = newId,
+                            deckId = targetDeckId,
+                            question = card.question,
+                            answer = card.answer,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                    }.insertedCount
+            }
+        }
+
+        return inserted
+    }
+
     fun update(card: Card): Card =
         transaction {
             val now = OffsetDateTime.now()
