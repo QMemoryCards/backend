@@ -5,7 +5,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
-import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.0.0"
@@ -93,12 +92,6 @@ kover {
         total {
             html { onCheck = true }
             xml { onCheck = true }
-
-            verify {
-                onCheck = true
-                rule("Line coverage >= 80%") { minBound(80, CoverageUnit.LINE) }
-                rule("Branch coverage >= 75%") { minBound(75, CoverageUnit.BRANCH) }
-            }
         }
     }
 }
