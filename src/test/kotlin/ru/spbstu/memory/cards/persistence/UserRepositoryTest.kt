@@ -2,28 +2,43 @@ package ru.spbstu.memory.cards.persistence
 
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import ru.spbstu.memory.cards.persistence.config.BasePostgresTest
-import ru.spbstu.memory.cards.persistence.mapper.toUser
 import ru.spbstu.memory.cards.persistence.table.UserTable
+import java.time.OffsetDateTime
+import java.util.UUID
 
 class UserRepositoryTest : BasePostgresTest() {
-    @Autowired
-    private lateinit var userRepository: UserRepository
+    @Test
+    fun findById_shouldReturnUser_whenUserExists() {
+        val userId = createTestUser()
+
+        val result = userRepository.findById(userId)
+
+        assertThat(result).isNotNull
+        assertThat(result!!.id).isEqualTo(userId)
+        assertThat(result.login).isEqualTo("testuser")
+        assertThat(result.email).isEqualTo("test@example.com")
+    }
+
+    @Test
+    fun findById_shouldReturnNull_whenUserNotExists() {
+        val result = userRepository.findById(UUID.randomUUID())
+
+        assertThat(result).isNull()
+    }
 
     @Test
     fun findByLogin_shouldReturnUser_whenUserExists() {
         transaction {
             UserTable.insert {
-                it[UserTable.id] = java.util.UUID.randomUUID()
+                it[UserTable.id] = UUID.randomUUID()
                 it[UserTable.email] = "test@example.com"
                 it[UserTable.login] = "testuser"
                 it[UserTable.password] = "hash"
-                it[UserTable.createdAt] = java.time.OffsetDateTime.now()
-                it[UserTable.updatedAt] = java.time.OffsetDateTime.now()
+                it[UserTable.createdAt] = OffsetDateTime.now()
+                it[UserTable.updatedAt] = OffsetDateTime.now()
             }
         }
 
@@ -42,28 +57,22 @@ class UserRepositoryTest : BasePostgresTest() {
     }
 
     @Test
-    fun existsByLogin_shouldReturnTrue_whenUserExists() {
-        transaction {
-            UserTable.insert {
-                it[UserTable.id] = java.util.UUID.randomUUID()
-                it[UserTable.email] = "exists@example.com"
-                it[UserTable.login] = "existsuser"
-                it[UserTable.password] = "hash"
-                it[UserTable.createdAt] = java.time.OffsetDateTime.now()
-                it[UserTable.updatedAt] = java.time.OffsetDateTime.now()
-            }
-        }
+    fun existsByEmailAndId_shouldReturnFalse_whenAnotherUserHasEmail() {
+        createTestUser(email = "same@example.com", login = "user1")
+        val user2Id = createTestUser(email = "other@example.com", login = "user2")
 
-        val result = userRepository.existsByLogin("existsuser")
+        val result = userRepository.existsByEmailAndId("same@example.com", user2Id)
 
-        assertThat(result).isTrue()
+        assertThat(result).isFalse()
     }
 
     @Test
-    fun existsByLogin_shouldReturnFalse_whenUserNotExists() {
-        val result = userRepository.existsByLogin("nonexistent")
+    fun existsByEmailAndId_shouldReturnTrue_whenOnlyThisUserHasEmail() {
+        val userId = createTestUser(email = "only@example.com", login = "onlyuser")
 
-        assertThat(result).isFalse()
+        val result = userRepository.existsByEmailAndId("only@example.com", userId)
+
+        assertThat(result).isTrue()
     }
 
     @Test
@@ -74,19 +83,47 @@ class UserRepositoryTest : BasePostgresTest() {
 
         val result = userRepository.saveNew(email, login, passwordHash)
 
-        val savedUser =
-            transaction {
-                UserTable
-                    .selectAll()
-                    .where { UserTable.id eq result.id }
-                    .firstOrNull()
-                    ?.toUser()
-            }
-
-        assertThat(savedUser).isNotNull
-        assertThat(savedUser!!.email).isEqualTo(email)
-        assertThat(savedUser.login).isEqualTo(login)
-        assertThat(savedUser.passwordHash).isEqualTo(passwordHash)
-        assertThat(savedUser.id).isEqualTo(result.id)
+        assertThat(result.id).isNotNull
+        assertThat(result.email).isEqualTo(email)
+        assertThat(result.login).isEqualTo(login)
+        assertThat(result.passwordHash).isEqualTo(passwordHash)
     }
+
+    @Test
+    fun update_shouldModifyUser() {
+        val userId = createTestUser(email = "old@example.com", login = "oldlogin")
+        val user = userRepository.findById(userId)!!
+
+        val updated = userRepository.update(user.copy(email = "new@example.com", login = "newlogin"))
+
+        assertThat(updated.email).isEqualTo("new@example.com")
+        assertThat(updated.login).isEqualTo("newlogin")
+        val fromDb = userRepository.findById(userId)
+        assertThat(fromDb!!.email).isEqualTo("new@example.com")
+        assertThat(fromDb.login).isEqualTo("newlogin")
+    }
+
+    @Test
+    fun updatePassword_shouldChangePassword() {
+        val userId = createTestUser()
+        userRepository.updatePassword(userId, "newHash")
+
+        val user = userRepository.findById(userId)
+        assertThat(user!!.passwordHash).isEqualTo("newHash")
+    }
+
+    @Test
+    fun delete_shouldRemoveUser() {
+        val userId = createTestUser()
+
+        userRepository.delete(userId)
+
+        assertThat(userRepository.findById(userId)).isNull()
+        assertThat(userRepository.findByLogin("testuser")).isNull()
+    }
+
+    private fun createTestUser(
+        email: String = "test@example.com",
+        login: String = "testuser",
+    ): UUID = userRepository.saveNew(email, login, "hash").id
 }

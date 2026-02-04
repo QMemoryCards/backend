@@ -1,7 +1,7 @@
 package ru.spbstu.memory.cards.service.study
 
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Service
+import ru.spbstu.memory.cards.config.TxRunner
 import ru.spbstu.memory.cards.dto.request.StudyAnswerRequest
 import ru.spbstu.memory.cards.dto.request.StudyStatusEnum
 import ru.spbstu.memory.cards.dto.response.StudyAnswerResponse
@@ -18,13 +18,14 @@ import java.util.UUID
 class StudyService(
     private val cardRepository: CardRepository,
     private val deckRepository: DeckRepository,
+    private val txRunner: TxRunner,
 ) {
     fun processStudyAnswer(
         deckId: UUID,
         userId: UUID,
         req: StudyAnswerRequest,
     ): StudyAnswerResponse =
-        transaction {
+        txRunner.required {
             val deck =
                 deckRepository.findById(deckId)
                     ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)

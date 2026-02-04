@@ -1,7 +1,7 @@
 package ru.spbstu.memory.cards.service.card
 
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Service
+import ru.spbstu.memory.cards.config.TxRunner
 import ru.spbstu.memory.cards.dto.request.CreateCardRequest
 import ru.spbstu.memory.cards.dto.response.CardResponse
 import ru.spbstu.memory.cards.exception.api.ApiErrorCode
@@ -19,6 +19,7 @@ import java.util.UUID
 class CardService(
     private val cardRepository: CardRepository,
     private val deckRepository: DeckRepository,
+    private val txRunner: TxRunner,
 ) {
     companion object {
         const val CARD_LIMIT = 30
@@ -53,7 +54,6 @@ class CardService(
         if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
         val cards = cardRepository.findAllByDeckId(deckId)
-
         return cards.map { it.toResponse() }
     }
 
@@ -62,7 +62,7 @@ class CardService(
         userId: UUID,
         req: CreateCardRequest,
     ): CardResponse =
-        transaction {
+        txRunner.required {
             val deck =
                 deckRepository.findById(deckId)
                     ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)
@@ -104,20 +104,22 @@ class CardService(
         deckId: UUID,
         cardId: UUID,
         userId: UUID,
-    ) = transaction {
-        val deck =
-            deckRepository.findById(deckId)
-                ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)
-        if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
+    ) {
+        txRunner.required {
+            val deck =
+                deckRepository.findById(deckId)
+                    ?: throw NotFoundException(code = ApiErrorCode.DECK_NOT_FOUND)
+            if (deck.userId != userId) throw ForbiddenException(ApiErrorDescription.FORBIDDEN.description)
 
-        val card =
-            cardRepository.findById(cardId)
-                ?: throw NotFoundException(code = ApiErrorCode.CARD_NOT_FOUND)
-        if (card.deckId != deckId) throw NotFoundException(code = ApiErrorCode.CARD_NOT_FOUND)
+            val card =
+                cardRepository.findById(cardId)
+                    ?: throw NotFoundException(code = ApiErrorCode.CARD_NOT_FOUND)
+            if (card.deckId != deckId) throw NotFoundException(code = ApiErrorCode.CARD_NOT_FOUND)
 
-        cardRepository.delete(cardId)
+            cardRepository.delete(cardId)
 
-        val newCount = if (deck.cardsCount > 0) deck.cardsCount - 1 else 0
-        deckRepository.update(deck.copy(cardsCount = newCount))
+            val newCount = if (deck.cardsCount > 0) deck.cardsCount - 1 else 0
+            deckRepository.update(deck.copy(cardsCount = newCount))
+        }
     }
 }
