@@ -113,6 +113,60 @@ jobs:
       - name: Run tests
         run: ./gradlew test -x ktlintCheck
 
+      - name: Upload coverage report (HTML)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: build/reports/kover/html
+
+      - name: Upload coverage report (XML)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: build/reports/kover/report.xml
+      - name: Extract coverage from Kover XML
+        id: coverage
+        run: |
+          TOTAL_COVERED=$(grep 'type="LINE"' build/reports/kover/report.xml \
+            | sed -n 's/.*covered="\([0-9]*\)".*/\1/p' \
+            | awk '{s+=$1} END {print s}')
+
+          TOTAL_MISSED=$(grep 'type="LINE"' build/reports/kover/report.xml \
+            | sed -n 's/.*missed="\([0-9]*\)".*/\1/p' \
+            | awk '{s+=$1} END {print s}')
+
+          TOTAL=$((TOTAL_COVERED + TOTAL_MISSED))
+
+          if [ "$TOTAL" -eq 0 ]; then
+            COVERAGE=0
+          else
+            COVERAGE=$(awk "BEGIN {printf \"%.2f\", ($TOTAL_COVERED/$TOTAL)*100}")
+          fi
+
+          echo "coverage=$COVERAGE" >> $GITHUB_OUTPUT
+      - name: Comment coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverage = '${{ steps.coverage.outputs.coverage }}'
+
+            const body = `
+            ### Code Coverage Report
+
+              **Line coverage:** ${coverage}%
+
+            Source: Kover XML report
+            Gate: enforced via \`koverVerify\`
+              `
+
+              await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+              body
+            })
+
   docker-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
