@@ -8,14 +8,16 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.junit.jupiter.Testcontainers
+import ru.spbstu.memory.cards.config.AbstractIntegrationTest
 import ru.spbstu.memory.cards.persistence.table.CardTable
+import ru.spbstu.memory.cards.persistence.table.DeckSharesTable
 import ru.spbstu.memory.cards.persistence.table.DeckTable
 import ru.spbstu.memory.cards.persistence.table.UserTable
 
 @Testcontainers
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class BasePostgresTest {
+abstract class BasePostgresTest : AbstractIntegrationTest() {
     companion object {
         @JvmStatic
         @DynamicPropertySource
@@ -39,6 +41,7 @@ abstract class BasePostgresTest {
     fun cleanDatabase() {
         transaction {
             CardTable.deleteAll()
+            DeckSharesTable.deleteAll()
             DeckTable.deleteAll()
             UserTable.deleteAll()
         }

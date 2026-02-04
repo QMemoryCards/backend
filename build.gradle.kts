@@ -12,28 +12,21 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.jetbrains.kotlin.plugin.spring") version "2.0.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+    id("org.jetbrains.kotlinx.kover") version "0.9.5"
 }
 
 group = "ru.spbstu.memory.cards"
 
 sourceSets {
-    named("main") {
-        resources.setSrcDirs(listOf("src/main/resources"))
-    }
-    named("test") {
-        resources.setSrcDirs(listOf("src/test/resources"))
-    }
+    named("main") { resources.setSrcDirs(listOf("src/main/resources")) }
+    named("test") { resources.setSrcDirs(listOf("src/test/resources")) }
 }
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
 }
 
-repositories {
-    mavenCentral()
-}
+repositories { mavenCentral() }
 
 val exposedVersion = "0.60.0"
 val postgresVersion = "42.7.4"
@@ -47,7 +40,6 @@ dependencies {
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-
     implementation("org.liquibase:liquibase-core")
 
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -57,8 +49,9 @@ dependencies {
 
     implementation("org.postgresql:postgresql:$postgresVersion")
 
-    // Tests
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("org.testcontainers:junit-jupiter:1.20.1")
     testImplementation("org.testcontainers:postgresql:1.20.1")
 }
@@ -79,17 +72,35 @@ ktlint {
 tasks.withType<KotlinCompile> {
     dependsOn("ktlintFormat")
 }
-
 tasks.named("ktlintCheck") {
     dependsOn("ktlintFormat")
 }
 
-tasks.named("build") {
-    dependsOn("ktlintCheck")
+kover {
+    reports {
+        filters {
+            excludes {
+                classes(
+                    "ru.spbstu.memory.cards.Application*",
+                    "ru.spbstu.memory.cards.config*",
+                    "ru.spbstu.memory.cards.persistence.config*",
+                    "ru.spbstu.memory.cards.persistence.table*",
+                )
+            }
+        }
+
+        total {
+            html { onCheck = true }
+            xml { onCheck = true }
+        }
+    }
 }
 
 tasks.named("check") {
-    dependsOn("ktlintCheck")
+    dependsOn("ktlintCheck", "test", "koverHtmlReport", "koverVerify")
+}
+tasks.named("build") {
+    dependsOn("ktlintCheck", "test", "koverHtmlReport", "koverVerify")
 }
 
 tasks.withType<Test> {
@@ -104,14 +115,6 @@ tasks.withType<Test> {
 
     testLogging {
         lifecycle {
-            events = logEvents
-            exceptionFormat = TestExceptionFormat.FULL
-            showExceptions = true
-            showCauses = true
-            showStackTraces = true
-            showStandardStreams = true
-        }
-        info {
             events = logEvents
             exceptionFormat = TestExceptionFormat.FULL
             showExceptions = true
@@ -164,7 +167,6 @@ tasks.withType<Test> {
                             ${result.skippedTestCount} skipped
                         """.trimIndent(),
                     )
-
                     if (failedTests.isNotEmpty()) failedTests.printSummary("Failed Tests:")
                     if (skippedTests.isNotEmpty()) skippedTests.printSummary("Skipped Tests:")
                 }
