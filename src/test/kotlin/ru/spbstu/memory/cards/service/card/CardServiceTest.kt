@@ -11,6 +11,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import ru.spbstu.memory.cards.config.TxRunner
 import ru.spbstu.memory.cards.dto.request.CreateCardRequest
 import ru.spbstu.memory.cards.exception.api.ApiErrorCode
 import ru.spbstu.memory.cards.exception.domain.ForbiddenException
@@ -18,7 +19,6 @@ import ru.spbstu.memory.cards.exception.domain.LimitExceededException
 import ru.spbstu.memory.cards.exception.domain.NotFoundException
 import ru.spbstu.memory.cards.persistence.CardRepository
 import ru.spbstu.memory.cards.persistence.DeckRepository
-import ru.spbstu.memory.cards.config.TxRunner
 import ru.spbstu.memory.cards.persistence.model.Card
 import ru.spbstu.memory.cards.persistence.model.Deck
 import ru.spbstu.memory.cards.persistence.model.PaginatedResult
@@ -315,9 +315,7 @@ class CardServiceTest(
 
         verify(cardRepository).delete(cardId)
         verify(deckRepository).update(
-            eq(emptyDeck.copy(cardsCount = 0))
+            eq(emptyDeck.copy(cardsCount = 0)),
         )
     }
 }
-
-
