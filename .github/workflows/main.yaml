@@ -3,6 +3,8 @@ name: CI Pipeline
 permissions:
   contents: read
   packages: write
+  pull-requests: write
+  issues: write
 
 on:
   push:
