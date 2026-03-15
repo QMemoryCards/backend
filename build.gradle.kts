@@ -76,6 +76,27 @@ tasks.named("ktlintCheck") {
     dependsOn("ktlintFormat")
 }
 
+tasks.register<Test>("integrationTest") {
+    description = "Runs only integration tests"
+    group = "verification"
+
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+
+    shouldRunAfter(tasks.test)
+}
+
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+}
+
+tasks.check {
+    dependsOn("integrationTest")
+}
+
 kover {
     reports {
         filters {

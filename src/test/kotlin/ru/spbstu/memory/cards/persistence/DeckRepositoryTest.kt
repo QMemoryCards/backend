@@ -3,6 +3,7 @@ package ru.spbstu.memory.cards.persistence
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import ru.spbstu.memory.cards.BaseIntegrationTest
 import ru.spbstu.memory.cards.persistence.table.DeckTable
@@ -10,6 +11,7 @@ import ru.spbstu.memory.cards.persistence.table.UserTable
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Tag("integration")
 class DeckRepositoryTest : BaseIntegrationTest() {
     private fun createTestUser(): UUID {
         return transaction {

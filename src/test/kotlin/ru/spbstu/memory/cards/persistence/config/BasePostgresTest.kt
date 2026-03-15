@@ -3,6 +3,7 @@ package ru.spbstu.memory.cards.persistence.config
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -16,6 +17,7 @@ import ru.spbstu.memory.cards.persistence.table.UserTable
 @Testcontainers
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Tag("integration")
 abstract class BasePostgresTest {
     companion object {
         @JvmStatic

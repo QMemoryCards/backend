@@ -3,12 +3,14 @@ package ru.spbstu.memory.cards.persistence
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import ru.spbstu.memory.cards.BaseIntegrationTest
 import ru.spbstu.memory.cards.persistence.table.UserTable
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Tag("integration")
 class UserRepositoryTest : BaseIntegrationTest() {
     @Test
     fun findById_shouldReturnUser_whenUserExists() {
