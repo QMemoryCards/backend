@@ -2,14 +2,12 @@ package ru.spbstu.memory.cards.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import ru.spbstu.memory.cards.BaseIntegrationTest
 
-@Tag("integration")
 class AuthIntegrationTest : BaseIntegrationTest() {
     @Test
     @DisplayName("1.1 Регистрация, вход и получение списка колод")

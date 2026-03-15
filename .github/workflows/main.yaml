@@ -57,8 +57,8 @@ jobs:
         with:
           path: .
 
-  build:
-    name: Build Project
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
     needs: static-analysis
 
@@ -82,13 +82,16 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-build-
 
-      - name: Build project
-        run: ./gradlew build -x ktlintCheck
+      - name: Run unit tests
+        run: ./gradlew test -x ktlintCheck
 
-  test:
-    name: Run Tests
+      - name: Run integration tests
+        run: ./gradlew integrationTest -x ktlintCheck -x test
+
+  build:
+    name: Build Project
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
 
     steps:
       - name: Checkout code
@@ -110,8 +113,8 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-build-
 
-      - name: Run tests
-        run: ./gradlew test -x ktlintCheck
+      - name: Build project
+        run: ./gradlew build -x ktlintCheck -x test -x integrationTest
 
   docker-image:
     name: Build Docker Image
