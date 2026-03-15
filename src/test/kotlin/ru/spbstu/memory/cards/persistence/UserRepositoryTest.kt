@@ -4,12 +4,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
-import ru.spbstu.memory.cards.persistence.config.BasePostgresTest
+import ru.spbstu.memory.cards.BaseIntegrationTest
 import ru.spbstu.memory.cards.persistence.table.UserTable
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class UserRepositoryTest : BasePostgresTest() {
+class UserRepositoryTest : BaseIntegrationTest() {
     @Test
     fun findById_shouldReturnUser_whenUserExists() {
         val userId = createTestUser()

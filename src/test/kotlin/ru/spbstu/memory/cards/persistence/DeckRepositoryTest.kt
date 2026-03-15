@@ -4,13 +4,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
-import ru.spbstu.memory.cards.persistence.config.BasePostgresTest
+import ru.spbstu.memory.cards.BaseIntegrationTest
 import ru.spbstu.memory.cards.persistence.table.DeckTable
 import ru.spbstu.memory.cards.persistence.table.UserTable
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class DeckRepositoryTest : BasePostgresTest() {
+class DeckRepositoryTest : BaseIntegrationTest() {
     private fun createTestUser(): UUID {
         return transaction {
             val userId = UUID.randomUUID()
