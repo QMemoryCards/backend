@@ -2,7 +2,6 @@ package ru.spbstu.memory.cards
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions
-import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.http.MediaType
@@ -21,7 +20,6 @@ import ru.spbstu.memory.cards.persistence.config.BasePostgresTest
 import java.util.UUID
 
 @AutoConfigureMockMvc
-@Tag("integration")
 abstract class BaseIntegrationTest : BasePostgresTest() {
     @Autowired
     protected lateinit var mockMvc: MockMvc

@@ -2,7 +2,6 @@ package ru.spbstu.memory.cards.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -12,7 +11,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import ru.spbstu.memory.cards.BaseIntegrationTest
 import ru.spbstu.memory.cards.dto.request.UpdateUserRequest
 
-@Tag("integration")
 class MeIntegrationTest : BaseIntegrationTest() {
     @Test
     @DisplayName("2.1 Удаление авторизованного пользователя")
