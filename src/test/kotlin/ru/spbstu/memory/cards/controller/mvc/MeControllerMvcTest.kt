@@ -1,6 +1,7 @@
 package ru.spbstu.memory.cards.controller.mvc
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
@@ -27,6 +28,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @WebMvcTest(MeController::class)
+@Tag("integration")
 class MeControllerMvcTest(
     @Autowired private val mockMvc: MockMvc,
     @Autowired private val objectMapper: ObjectMapper,

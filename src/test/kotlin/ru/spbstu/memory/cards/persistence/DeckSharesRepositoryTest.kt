@@ -1,11 +1,13 @@
 package ru.spbstu.memory.cards.persistence
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import ru.spbstu.memory.cards.persistence.config.BasePostgresTest
+import ru.spbstu.memory.cards.BaseIntegrationTest
 import java.util.UUID
 
-class DeckSharesRepositoryTest : BasePostgresTest() {
+@Tag("integration")
+class DeckSharesRepositoryTest : BaseIntegrationTest() {
     @Test
     fun saveToken_shouldPersistTokenAndDeckId() {
         val deckId = createTestDeck()
