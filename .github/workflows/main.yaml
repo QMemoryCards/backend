@@ -190,7 +190,7 @@ jobs:
         env:
           BACKEND_IMAGE: ${{ steps.tags.outputs.primary }}
         run: |
-          docker compose up -d --no-build --wait --wait-timeout 180
+          docker compose up -d --no-build --wait --wait-timeout 180 db backend
           curl -fsS http://localhost:8080/actuator/health
 
       - name: Show compose logs on failure
