@@ -52,6 +52,10 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: static-analysis
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout code
@@ -70,28 +74,8 @@ jobs:
       - name: Run integration tests
         run: ./gradlew integrationTest -x ktlintCheck -x test
 
-  build:
-    name: Build Project
-    runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
-
-      - name: Build project
-        run: ./gradlew build -x ktlintCheck -x test -x integrationTest
+      - name: Generate coverage reports
+        run: ./gradlew koverXmlReport koverHtmlReport -x ktlintCheck
 
       - name: Upload coverage report (HTML)
         uses: actions/upload-artifact@v4
@@ -108,6 +92,10 @@ jobs:
       - name: Extract coverage from Kover XML
         id: coverage
         run: |
+          if [ ! -f build/reports/kover/report.xml ]; then
+            echo "Kover XML report not found: build/reports/kover/report.xml" >&2
+            exit 1
+          fi
           TOTAL_COVERED=$(grep 'type="LINE"' build/reports/kover/report.xml \
             | sed -n 's/.*covered="\([0-9]*\)".*/\1/p' \
             | awk '{s+=$1} END {print s}')
@@ -116,10 +104,10 @@ jobs:
             | awk '{s+=$1} END {print s}')
           TOTAL=$((TOTAL_COVERED + TOTAL_MISSED))
           if [ "$TOTAL" -eq 0 ]; then
-            COVERAGE=0
-          else
-            COVERAGE=$(awk "BEGIN {printf \"%.2f\", ($TOTAL_COVERED/$TOTAL)*100}")
+            echo "No LINE counters found in Kover XML report" >&2
+            exit 1
           fi
+          COVERAGE=$(awk "BEGIN {printf \"%.2f\", ($TOTAL_COVERED/$TOTAL)*100}")
           echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
 
       - name: Comment coverage to PR
@@ -134,7 +122,6 @@ jobs:
               **Line coverage:** ${coverage}%
 
             Source: Kover XML report
-            Gate: enforced via \`koverVerify\`
             `
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -142,6 +129,25 @@ jobs:
               repo: context.repo.repo,
               body
             })
+
+  build:
+    name: Build Project
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Build project
+        run: ./gradlew build -x ktlintCheck -x test -x integrationTest
 
   docker:
     name: Docker Image
