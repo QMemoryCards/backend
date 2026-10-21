@@ -122,7 +122,6 @@ jobs:
               **Line coverage:** ${coverage}%
 
             Source: Kover XML report
-            Gate: enforced via \`koverVerify\`
             `
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
